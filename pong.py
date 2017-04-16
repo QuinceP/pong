@@ -90,13 +90,26 @@ class Ball(pygame.sprite.Sprite):
                 self.score2 += 1
                 self.scoreChanged = True
 
-                self.vector = (((0.3 * (random.randint(5, 8)))), ((0.1 * (random.randint(5, 8)))))
+                flip = random.randint(0, 1)
+                angle = random.uniform(0.1, 1)
+                angle = self.avoid(angle)
+                if flip == 1:
+                    angle = -angle
+                self.vector = (angle, angle)
+
                 self.rect.x = (background.get_width() / 2)
                 self.rect.y = (background.get_height() / 2)
             if tr and br:
                 self.score1 += 1
                 self.scoreChanged = True
-                self.vector = (((0.3 * (random.randint(5,8)))), ((0.1 * (random.randint(5,8)))))
+
+                flip = random.randint(0, 1)
+                angle = random.uniform(0.1, 1)
+                angle = self.avoid(angle)
+                if flip == 1:
+                    angle = -angle
+                self.vector = (angle, angle)
+
                 self.rect.x = (background.get_width() / 2)
                 self.rect.y = (background.get_height() / 2)
         else:
@@ -125,6 +138,36 @@ class Ball(pygame.sprite.Sprite):
         (angle,z) = vector
         (dx,dy) = (z*math.cos(angle),z*math.sin(angle))
         return rect.move(dx,dy)
+
+    def avoid(self, angle, always_avoid=0, turn=0):
+        # stay away from angles near to pi/2 and 3*pi/2 (which are vertical movements, impossible for players)
+        # angle = self.norm(angle)
+        pb2 = math.pi / 2
+        pb2t3 = 3 * pb2
+        tooclose = math.pi / 3
+        if not turn:
+            turn = math.pi / 40
+        if angle < pb2:
+            if always_avoid or (pb2 - angle) < tooclose:
+                angle -= turn
+        elif angle < math.pi:
+            if always_avoid or (angle - pb2) < tooclose:
+                angle += turn
+        elif angle < pb2t3:
+            if always_avoid or (pb2t3 - angle) < tooclose:
+                angle -= turn
+        else:
+            if always_avoid or (angle - pb2t3) < tooclose:
+                angle += turn
+        return angle
+
+    def norm(self, angle):
+        p2 = math.pi * 2
+        while angle < 0:
+            angle += p2
+        while angle >= p2:
+            angle -= p2
+        return angle
 
 class Bat(pygame.sprite.Sprite):
     """Movable tennis 'bat' with which one hits the ball
@@ -171,7 +214,7 @@ def main():
     # Initialise screen
     pygame.init()
     screen = pygame.display.set_mode((640, 480))
-    pygame.display.set_caption('Basic Pong')
+    pygame.display.set_caption('Quincy Pong')
 
     global background
     # Fill background
@@ -196,7 +239,7 @@ def main():
     player2 = Bat("right")
 
     # Initialise ball
-    speed = 13
+    speed = 10
     rand = ((0.1 * (random.randint(5,8))))
     ball = Ball((0,0),(0.47,speed))
 
